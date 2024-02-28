@@ -37,6 +37,8 @@ sudo apt-get install docker-compose-plugin
 git clone git@github.com:ildar-aiupov/packages.git
 ```
 
+- В корневой папке проекта переименовать файл ```.env.example``` в файл ```.env```
+
 - Находясь в корневой папке проекта, запустить его сборку:
 ```
 sudo docker compose up -d
