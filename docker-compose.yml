@@ -1,0 +1,84 @@
+version: '3.1'
+
+volumes:
+  static:
+  mysqlvolume:
+
+services:
+
+  mysql:
+    build: ./mysql
+    container_name: mysql
+    environment:
+      MYSQL_DATABASE: 'api'
+      MYSQL_USER: 'api'
+      MYSQL_PASSWORD: 'api'
+      MYSQL_ROOT_PASSWORD: 'api'
+    volumes:
+      - mysqlvolume:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  rabbit:
+    image: rabbitmq:3-management
+    environment:
+      - RABBITMQ_DEFAULT_USER=api
+      - RABBITMQ_DEFAULT_PASS=api
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 10
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  consumer:
+    build: ./consumer
+    env_file: .env
+    depends_on:
+      mysql:
+        condition:
+          service_healthy
+      rabbit:
+        condition:
+          service_healthy
+      redis:
+        condition:
+          service_healthy
+    restart: always
+
+  django_service:
+    build: ./django_service
+    container_name: django_service
+    env_file: .env
+    volumes:
+      - static:/backend_static
+    depends_on:
+      mysql:
+        condition:
+          service_healthy
+      rabbit:
+        condition:
+          service_healthy
+    restart: always
+
+  nginx:
+    build: ./nginx
+    container_name: nginx
+    ports:
+      - 80:80
+    volumes:
+      - static:/static
+    depends_on:
+      - django_service
