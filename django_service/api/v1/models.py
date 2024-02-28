@@ -20,7 +20,7 @@ class Package(models.Model):
     """Модель посылки."""
 
     uuid = models.CharField(primary_key=True, default=uuid.uuid4, max_length=60)
-    name = models.CharField(max_length=200, blank=False, validators=[name_validator], verbose_name="Название пасылки")
+    name = models.CharField(max_length=200, blank=False, validators=[name_validator], verbose_name="Название посылки")
     weight = models.FloatField(blank=False, validators=[MinValueValidator(0.001)], verbose_name="Вес")
     type = models.ForeignKey(
         PackageType, on_delete=models.DO_NOTHING, blank=False, to_field="name", verbose_name="Тип"
